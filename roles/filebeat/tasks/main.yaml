@@ -1,0 +1,16 @@
+---
+- name: Populate service facts
+  service_facts:
+
+- name: Download filebeat
+  shell: "curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-{{ filebeat_version }}-amd64.deb"
+  when: '"filebeat.service" not in ansible_facts.services'
+
+- name: Install filebeat
+  shell: "dpkg -i filebeat-{{ filebeat_version }}-amd64.deb"
+  notify: Restart filebeat
+  when: '"filebeat.service" not in ansible_facts.services'
+
+- name: Remove .deb
+  shell: "rm filebeat-{{ filebeat_version }}-amd64.deb"
+  when: '"filebeat.service" not in ansible_facts.services'
