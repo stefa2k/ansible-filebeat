@@ -49,3 +49,25 @@
     insertafter: "output.logstash:"
     line: "  hosts: [\"{{ filebeat_connections | join('\", \"') }}\"]"
   notify: Restart filebeat
+
+- name: system.yml - check if module is disabled
+  stat: 
+    path: "{{ filebeat_system_yml }}.disabled"
+  register: system_disabled
+  when: hostvars[inventory_hostname].filebeat_system
+
+- name: system.yml - enable module
+  shell: "mv {{ filebeat_system_yml }}.disabled {{ filebeat_system_yml }}"
+  when: hostvars[inventory_hostname].filebeat_system and system_disabled.stat.exists
+  notify: Restart filebeat
+
+- name: postgresql.yml - check if module is disabled
+  stat: 
+    path: "{{ filebeat_postgresql_yml }}.disabled"
+  register: postgresql_disabled
+  when: hostvars[inventory_hostname].filebeat_postgresql
+
+- name: postgresql.yml - enable module
+  shell: "mv {{ filebeat_postgresql_yml }}.disabled {{ filebeat_postgresql_yml }}"
+  when: hostvars[inventory_hostname].filebeat_postgresql and postgresql_disabled.stat.exists
+  notify: Restart filebeat
