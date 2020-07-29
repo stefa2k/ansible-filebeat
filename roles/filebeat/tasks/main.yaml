@@ -14,3 +14,38 @@
 - name: Remove .deb
   shell: "rm filebeat-{{ filebeat_version }}-amd64.deb"
   when: '"filebeat.service" not in ansible_facts.services'
+
+- name: filebeat.yml - remove elasticsearch output
+  lineinfile:
+    path: "{{ filebeat_yml }}"
+    regexp: '^output\.elasticsearch'
+    line: "#output.elasticsearch:"
+  notify: Restart filebeat
+
+- name: filebeat.yml - remove elasticsearch hosts
+  lineinfile:
+    path: "{{ filebeat_yml }}"
+    regexp: '^  hosts\: \[\"localhost:9200\"\]'
+    line: "  #hosts: [\"localhost:9200\"]"
+  notify: Restart filebeat
+
+- name: filebeat.yml - add logstash output
+  lineinfile:
+    path: "{{ filebeat_yml }}"
+    regexp: '^\#output\.logstash:'
+    line: "output.logstash:"
+  notify: Restart filebeat
+
+- name: filebeat.yml - remove previously defined hosts
+  lineinfile:
+    path: "{{ filebeat_yml }}"
+    regexp: '^ *hosts:'
+    state: absent
+  notify: Restart filebeat
+
+- name: filebeat.yml - add logstash hosts
+  lineinfile:
+    path: "{{ filebeat_yml }}"
+    insertafter: "output.logstash:"
+    line: "  hosts: [{{ filebeat_connections | map('quote') | join(', ') }}]"
+  notify: Restart filebeat
